@@ -16,6 +16,7 @@ namespace EmployeeManagementSystem.Forms
             employee = emp;
             isEditMode = emp != null;
             InitializeComponent();
+           
         }
 
         private void EmployeeForm_Load(object sender, EventArgs e)

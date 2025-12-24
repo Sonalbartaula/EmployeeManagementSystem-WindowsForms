@@ -12,29 +12,46 @@ namespace EmployeeManagementSystem.Forms
         public SignupForm()
         {
             InitializeComponent();
+            
         }
 
         private void SignupForm_Load(object sender, EventArgs e)
         {
-            // Form load event (optional)
+            try
+            {
+
+                string path = Path.Combine(
+                    Application.StartupPath,
+                    "Assets",
+                    "FingerPrint.png"
+                    );
+                pictureBoxFingerprint.Image = Image.FromFile(path);
+            }
+            catch
+            {
+
+                pictureBoxFingerprint.BackColor = System.Drawing.Color.FromArgb(135, 206, 235);
+            }
         }
 
         private void btnSignup_Click(object sender, EventArgs e)
         {
             string username = txtUsername.Text.Trim();
+            string email = txtEmail.Text.Trim();
             string password = txtPassword.Text;
-            string confirmPassword = txtConfirmPassword.Text;
 
-            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
+            // Validation
+            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
             {
                 MessageBox.Show("Please fill in all fields.", "Validation Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            if (password != confirmPassword)
+            // Email validation
+            if (!email.Contains("@") || !email.Contains("."))
             {
-                MessageBox.Show("Passwords do not match.", "Validation Error",
+                MessageBox.Show("Please enter a valid email address.", "Validation Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
@@ -50,6 +67,7 @@ namespace EmployeeManagementSystem.Forms
             {
                 using (var db = new AppDbContext())
                 {
+                    // Check if username already exists
                     if (db.Users.Any(u => u.Username == username))
                     {
                         MessageBox.Show("Username already exists. Please choose another.",
@@ -57,10 +75,12 @@ namespace EmployeeManagementSystem.Forms
                         return;
                     }
 
+                    // Create new user
                     var user = new User
                     {
                         Username = username,
                         PasswordHash = PasswordHelper.HashPassword(password),
+                        Role = "User",
                         CreatedAt = DateTime.Now
                     };
 
@@ -70,9 +90,10 @@ namespace EmployeeManagementSystem.Forms
                     MessageBox.Show("Account created successfully! Please login.",
                         "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
+                    // Navigate to login form
                     LoginForm loginForm = new LoginForm();
                     loginForm.Show();
-                    this.Close();
+                    this.Hide();
                 }
             }
             catch (Exception ex)
@@ -82,16 +103,23 @@ namespace EmployeeManagementSystem.Forms
             }
         }
 
-        private void btnGoToLogin_Click(object sender, EventArgs e)
+        private void linkLabelLogin_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             LoginForm loginForm = new LoginForm();
             loginForm.Show();
-            this.Close();
+            this.Hide();
         }
 
-        private void txtUsername_TextChanged(object sender, EventArgs e)
+        protected override void OnFormClosing(FormClosingEventArgs e)
         {
+            base.OnFormClosing(e);
 
+            if (e.CloseReason == CloseReason.UserClosing && !this.Visible)
+            {
+                e.Cancel = true;
+            }
         }
+
+       
     }
 }

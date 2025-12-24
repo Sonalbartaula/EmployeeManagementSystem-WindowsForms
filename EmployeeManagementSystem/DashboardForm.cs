@@ -14,6 +14,7 @@ namespace EmployeeManagementSystem.Forms
         {
             currentUser = user;
             InitializeComponent();
+            
         }
 
         private void DashboardForm_Load(object sender, EventArgs e)
@@ -131,8 +132,7 @@ namespace EmployeeManagementSystem.Forms
 
             if (result == DialogResult.Yes)
             {
-                LoginForm loginForm = new LoginForm();
-                loginForm.Show();
+                // Close dashboard and let the login form handle showing itself again
                 this.Close();
             }
         }

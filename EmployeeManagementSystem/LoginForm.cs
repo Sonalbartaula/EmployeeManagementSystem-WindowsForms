@@ -11,17 +11,35 @@ namespace EmployeeManagementSystem.Forms
         public LoginForm()
         {
             InitializeComponent();
+            
         }
 
         private void LoginForm_Load(object sender, EventArgs e)
         {
-            // Form load event (optional)
+            try
+            {
+
+                string path = Path.Combine(
+                    Application.StartupPath,
+                    "Assets",
+                    "FingerPrint.png"
+                    );
+                pictureBoxFingerprint.Image = Image.FromFile(path);
+            }
+            catch
+            {
+                
+                pictureBoxFingerprint.BackColor = System.Drawing.Color.FromArgb(135, 206, 235);
+            }
+
+
         }
 
         private void btnLogin_Click(object sender, EventArgs e)
         {
             string username = txtUsername.Text.Trim();
             string password = txtPassword.Text;
+            string role = txtRole.Text.Trim();
 
             if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
             {
@@ -50,12 +68,38 @@ namespace EmployeeManagementSystem.Forms
                         return;
                     }
 
-                    MessageBox.Show($"Welcome back, {username}!",
+
+                    if (!user.Role.Equals(role, StringComparison.OrdinalIgnoreCase))
+                    {
+                        MessageBox.Show($"Access Denied! You are trying to login as '{role}' but your account role is '{user.Role}'.\n\nPlease enter the correct role.",
+                            "Role Mismatch", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+
+                    MessageBox.Show($"Welcome back, {username}!\nLogged in as: {user.Role}",
                         "Login Successful", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-                    DashboardForm dashboardForm = new DashboardForm(user);
-                    dashboardForm.Show();
-                    this.Close();
+                    if (user.Role.Equals("Admin", StringComparison.OrdinalIgnoreCase))
+                    {
+                        MainDashboard mainDashboard = new MainDashboard(user);
+                        mainDashboard.FormClosed += (s, args) => {
+                            this.Show();
+                            txtPassword.Clear();
+                        };
+                        mainDashboard.Show();
+                    }
+                    else if (user.Role == "User")
+                    {
+                        AttendanceForm attendance = new AttendanceForm(user);
+                        attendance.FormClosed += (s, args) => this.Close();
+                        attendance.Show();
+                    }
+                    else
+                    {
+                        MessageBox.Show("Unauthorized role.",
+                            "Access Denied", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        this.Show();
+                    }
                 }
             }
             catch (Exception ex)
@@ -65,11 +109,20 @@ namespace EmployeeManagementSystem.Forms
             }
         }
 
-        private void btnGoToSignup_Click(object sender, EventArgs e)
+        private void linkLabelSignup_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             SignupForm signupForm = new SignupForm();
+            signupForm.FormClosed += (s, args) => this.Show();
             signupForm.Show();
-            this.Close();
+            this.Hide();
         }
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            base.OnFormClosing(e);
+            Application.Exit();
+        }
+
+       
     }
 }
